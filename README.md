@@ -41,7 +41,7 @@ Um sistema completo para gerenciamento de biblioteca pessoal de jogos com integr
 
 | Componente | Tecnologia | Versao |
 |------------|------------|---------|
-| Backend | Python | 3.8+ |
+| Backend | Python | 3.9+ |
 | Banco de Dados | Microsoft SQL Server | 2019+ |
 | API Externa | Google Gemini AI | v1beta |
 | ORM/Driver | pyodbc | 4.0+ |
