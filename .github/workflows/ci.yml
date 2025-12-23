@@ -24,6 +24,10 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
+    - name: Instalar google-generativeai do GitHub
+      run: |
+        pip install git+https://github.com/google/generative-ai-python.git@v0.3.2    
+
     - name: Instalar dependências
       run: |
         python -m pip install --upgrade pip
@@ -102,7 +106,7 @@ jobs:
     
     - name: Verificar variáveis de ambiente
       run: |
-        echo "📝 Verificando .env.example..."
+        echo " Verificando .env.example..."
         if [ -f ".env.example" ]; then
           if grep -q "DB_SERVER" .env.example && grep -q "GEMINI_API_KEY" .env.example; then
             echo ".env.example contém variáveis necessárias"
