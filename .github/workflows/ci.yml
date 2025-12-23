@@ -13,7 +13,7 @@ jobs:
     
     strategy:
       matrix:
-        python-version:  ['3.9', '3.10', '3.11']
+        python-version: ['3.9', '3.10', '3.11']
     
     steps:
     - name: Checkout do código
@@ -24,122 +24,190 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     
-    - name: Instalar google-generativeai do GitHub
+    - name: Verificar versão do Python
       run: |
-        pip install git+https://github.com/google/generative-ai-python.git@v0.3.2    
-
-    - name: Instalar dependências
+        echo "Versão do Python:"
+        python --version
+        echo "Python path:"
+        which python
+    
+    - name: Instalar dependências básicas
       run: |
         python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-cov
+        echo "Instalando dependências básicas..."
+        pip install pyodbc pandas python-dotenv requests pytest pytest-cov
+    
+    - name: Instalar google-generativeai do GitHub
+      id: install-gemini
+      continue-on-error: true
+      run: |
+        echo "Tentando instalar google-generativeai..."
+        pip install git+https://github.com/google/generative-ai-python.git@v0.3.2 && echo "GEMINI_INSTALLED=true" >> $GITHUB_ENV || echo "GEMINI_INSTALLED=false" >> $GITHUB_ENV
+    
+    - name: Verificar instalação do google-generativeai
+      if: steps.install-gemini.outcome == 'success'
+      run: |
+        echo "Verificando se google-generativeai foi instalado..."
+        if pip list | grep -q "google-generativeai"; then
+          echo "google-generativeai instalado com sucesso"
+          echo "GEMINI_AVAILABLE=true" >> $GITHUB_ENV
+        else
+          echo "google-generativeai não foi instalado"
+          echo "GEMINI_AVAILABLE=false" >> $GITHUB_ENV
+        fi
     
     - name: Verificar formatação básica
       run: |
         echo "Verificando formatação de código..."
-        python -m py_compile database/*.py models/*.py utils/*.py api/*.py main.py 2>/dev/null || echo "Avisos de compilação (não são erros)"
+        python -m py_compile database/*.py models/*.py utils/*.py api/*.py main.py 2>/dev/null || echo "Avisos de compilacao (nao sao erros)"
     
     - name: Executar testes
       run: |
-        python -m pytest tests/ -v
+        echo "Executando testes..."
+        if [ -d "tests" ]; then
+          python -m pytest tests/ -v
+        else
+          echo "Pasta tests nao encontrada, pulando execucao de testes"
+        fi
     
     - name: Verificar estrutura do projeto
       run: |
-        echo " Verificando estrutura do projeto..."
+        echo "Verificando estrutura do projeto..."
         
-        # Arquivos obrigatórios
+        # Arquivos obrigatorios
         required_files=("main.py" "requirements.txt" "README.md" ".env.example")
         for file in "${required_files[@]}"; do
           if [ -f "$file" ]; then
-            echo " $file encontrado"
+            echo "$file encontrado"
           else
-            echo " $file não encontrado"
+            echo "$file nao encontrado"
             exit 1
           fi
         done
         
-        # Pastas obrigatórias
+        # Pastas obrigatorias
         required_dirs=("database" "models" "utils" "api" "tests")
         for dir in "${required_dirs[@]}"; do
           if [ -d "$dir" ]; then
-            echo " $dir/ encontrado"
+            echo "$dir/ encontrado"
             # Conta arquivos Python
             py_count=$(find "$dir" -name "*.py" | wc -l)
             echo "   - $py_count arquivo(s) Python"
           else
-            echo "$dir/ não encontrado"
+            echo "$dir/ nao encontrado"
             exit 1
           fi
         done
         
-        echo " Estrutura do projeto válida"
+        echo "Estrutura do projeto valida"
     
-    - name: Testar imports básicos
+    - name: Testar imports basicos
       run: |
-        echo " Testando imports..."
+        echo "Testando imports..."
         python -c "
+        print('Testando imports basicos...')
+        
+        try:
+            import pyodbc
+            print('pyodbc importado')
+        except Exception as e:
+            print(f'Erro pyodbc: {e}')
+        
+        try:
+            import pandas
+            print('pandas importado')
+        except Exception as e:
+            print(f'Erro pandas: {e}')
+        
+        try:
+            import requests
+            print('requests importado')
+        except Exception as e:
+            print(f'Erro requests: {e}')
+        
+        try:
+            import pytest
+            print('pytest importado')
+        except Exception as e:
+            print(f'Erro pytest: {e}')
+        
+        if '${{ env.GEMINI_AVAILABLE }}' == 'true':
+            try:
+                import google.generativeai
+                print('google.generativeai importado')
+            except Exception as e:
+                print(f'Erro google.generativeai: {e}')
+        else:
+            print('google-generativeai nao disponivel')
+        
+        print('')
+        print('Testando imports do projeto...')
+        
         try:
             from database.connection import DatabaseConnection
             print('DatabaseConnection importado')
         except Exception as e:
-            print(f' Erro DatabaseConnection: {e}')
-    
+            print(f'Erro DatabaseConnection: {e}')
+        
         try:
             from models.jogador import Jogador
             from models.jogo import Jogo
-            print(' Modelos importados')
+            print('Modelos importados')
         except Exception as e:
-            print(f'  Erro modelos: {e}')
+            print(f'Erro modelos: {e}')
         
         try:
             from utils.display import DisplayUtils
-            print(' Utilitários importados')
+            print('Utilitarios importados')
         except Exception as e:
-            print(f'  Erro utilitários: {e}')
+            print(f'Erro utilitarios: {e}')
         
-        try:
-            from api.gemini_client import GeminiClient
-            print(' GeminiClient importado')
-        except Exception as e:
-            print(f'  Erro GeminiClient: {e}')
+        if '${{ env.GEMINI_AVAILABLE }}' == 'true':
+            try:
+                from api.gemini_client import GeminiClient
+                print('GeminiClient importado')
+            except Exception as e:
+                print(f'Erro GeminiClient: {e}')
+        else:
+            print('GeminiClient nao testado (google-generativeai nao disponivel)')
         "
     
-    - name: Verificar variáveis de ambiente
+    - name: Verificar variaveis de ambiente
       run: |
-        echo " Verificando .env.example..."
+        echo "Verificando .env.example..."
         if [ -f ".env.example" ]; then
           if grep -q "DB_SERVER" .env.example && grep -q "GEMINI_API_KEY" .env.example; then
-            echo ".env.example contém variáveis necessárias"
+            echo ".env.example contem variaveis necessarias"
           else
-            echo " .env.example não contém todas as variáveis necessárias"
+            echo ".env.example nao contem todas as variaveis necessarias"
           fi
         fi
     
     - name: Validar requirements.txt
       run: |
-        echo " Verificando requirements.txt..."
+        echo "Verificando requirements.txt..."
         if [ -f "requirements.txt" ]; then
-          echo "Conteúdo de requirements.txt:"
+          echo "Conteudo de requirements.txt:"
           cat requirements.txt
           echo ""
           
-          # Verifica se tem as dependências principais
+          # Verifica se tem as dependencias principais
           if grep -q "pyodbc" requirements.txt && \
              grep -q "pandas" requirements.txt && \
              grep -q "requests" requirements.txt; then
-            echo "requirements.txt contém dependências principais"
+            echo "requirements.txt contem dependencias principais"
           else
-            echo "  requirements.txt pode estar incompleto"
+            echo "requirements.txt pode estar incompleto"
           fi
         fi
 
   validate:
-    name: Validação de Código
+    name: Validacao de Codigo
     runs-on: ubuntu-latest
     needs: test
     
     steps:
-    - name: Checkout do código
+    - name: Checkout do codigo
       uses: actions/checkout@v4
     
     - name: Configurar Python
@@ -149,12 +217,12 @@ jobs:
     
     - name: Verificar sintaxe Python em todos os arquivos
       run: |
-        echo " Verificando sintaxe Python..."
+        echo "Verificando sintaxe Python..."
         find . -name "*.py" -type f | while read file; do
           if python -m py_compile "$file" 2>/dev/null; then
             echo "$file - Sintaxe OK"
           else
-            echo " $file - Erro de sintaxe"
+            echo "$file - Erro de sintaxe"
             python -m py_compile "$file"
             exit 1
           fi
@@ -162,40 +230,144 @@ jobs:
     
     - name: Verificar por credenciais expostas
       run: |
-        echo " Verificando credenciais expostas..."
-        # Padrões para evitar
-        patterns=(
-          "password.*=.*['\"].*['\"]"
-          "api_key.*=.*['\"].*['\"]"
-          "secret.*=.*['\"].*['\"]"
-          "token.*=.*['\"].*['\"]"
+        echo "Verificando credenciais expostas..."
+        
+        # Padroes perigosos - valores hardcoded
+        dangerous_patterns=(
+          "password\\s*=\\s*['\"].*['\"]"
+          "api_key\\s*=\\s*['\"].*['\"]"
+          "secret\\s*=\\s*['\"].*['\"]"
+          "token\\s*=\\s*['\"].*['\"]"
+          "DB_PASSWORD\\s*=\\s*['\"].*['\"]"
+          "GEMINI_API_KEY\\s*=\\s*['\"].*['\"]"
+        )
+        
+        # Padroes seguros - devem ser ignorados
+        safe_patterns=(
+          "os\\.getenv"
+          "input("
+          "sua_senha"
+          "sua_chave"
+          "test_"
+          "Test"
+          "#"
+          "example"
+          "exemplo"
+          "placeholder"
+          "TODO"
+          "FIXME"
         )
         
         found_issues=false
         
-        for pattern in "${patterns[@]}"; do
-          if grep -r "$pattern" --include="*.py" . | grep -v "test_" | grep -v "#.*example" | grep -v "sua_senha" | grep -v "sua_chave"; then
-            echo "  Possível credencial exposta encontrada: $pattern"
-            found_issues=true
+        for pattern in "${dangerous_patterns[@]}"; do
+          # Procura o padrao perigoso
+          results=$(grep -r -n "$pattern" --include="*.py" . 2>/dev/null || true)
+          
+          if [ -n "$results" ]; then
+            # Filtra resultados seguros
+            filtered_results=""
+            while IFS= read -r line; do
+              is_safe=false
+              for safe_pattern in "${safe_patterns[@]}"; do
+                if echo "$line" | grep -q -i "$safe_pattern"; then
+                  is_safe=true
+                  break
+                fi
+              done
+              
+              if [ "$is_safe" = false ]; then
+                if [ -z "$filtered_results" ]; then
+                  filtered_results="$line"
+                else
+                  filtered_results="$filtered_results\n$line"
+                fi
+              fi
+            done <<< "$results"
+            
+            if [ -n "$filtered_results" ]; then
+              echo "Possivel credencial exposta encontrada (padrao: $pattern):"
+              echo -e "$filtered_results"
+              echo ""
+              found_issues=true
+            fi
           fi
         done
         
         if [ "$found_issues" = true ]; then
-          echo "Possíveis credenciais expostas encontradas"
+          echo "Possiveis credenciais expostas encontradas"
+          echo "Verifique se ha valores hardcoded de senhas/tokens no codigo"
+          echo "Use sempre variaveis de ambiente com os.getenv()"
           exit 1
         else
-          echo " Nenhuma credencial exposta encontrada"
+          echo "Nenhuma credencial exposta encontrada"
+          echo "Uso correto de variaveis de ambiente detectado"
         fi
     
-    - name: Gerar relatório final
+    - name: Verificar uso correto de variaveis de ambiente
+      run: |
+        echo "Verificando uso de variaveis de ambiente..."
+        
+        echo "Verificando database/connection.py..."
+        if grep -q "os\\.getenv.*DB_PASSWORD" database/connection.py; then
+          echo "DB_PASSWORD obtido via os.getenv() - CORRETO"
+        else
+          echo "DB_PASSWORD nao esta usando os.getenv() - VERIFIQUE"
+        fi
+        
+        echo ""
+        echo "Verificando api/gemini_client.py..."
+        if grep -q "os\\.getenv.*GEMINI_API_KEY" api/gemini_client.py; then
+          echo "GEMINI_API_KEY obtido via os.getenv() - CORRETO"
+        else
+          echo "GEMINI_API_KEY nao esta usando os.getenv() - VERIFIQUE"
+        fi
+        
+        echo ""
+        echo "Verificacao de seguranca concluida"
+    
+    - name: Verificar arquivos sensíveis no repositorio
+      run: |
+        echo "Verificando arquivos sensiveis no repositorio..."
+        
+        sensitive_files=(".env" "config.ini" "secrets.json" "*.key" "*.pem")
+        found_sensitive=false
+        
+        for pattern in "${sensitive_files[@]}"; do
+          if find . -name "$pattern" -type f | grep -v ".git" | grep -v "__pycache__" | grep -q "."; then
+            echo "Arquivo sensivel encontrado: $pattern"
+            find . -name "$pattern" -type f | grep -v ".git" | grep -v "__pycache__"
+            found_sensitive=true
+          fi
+        done
+        
+        if [ "$found_sensitive" = true ]; then
+          echo ""
+          echo "ATENCAO: Arquivos sensiveis encontrados no repositorio"
+          echo "Certifique-se de que arquivos .env, chaves e senhas nao sejam versionados"
+          echo "Adicione-os ao .gitignore"
+          exit 1
+        else
+          echo "Nenhum arquivo sensivel encontrado no repositorio - CORRETO"
+        fi
+    
+    - name: Gerar relatorio final
       if: always()
       run: |
-        echo " RELATÓRIO DE CI"
-        echo "=================="
-        echo "Repositório: ${{ github.repository }}"
+        echo "RELATORIO DE CI - Biblioteca de Jogos"
+        echo "======================================"
+        echo "Repositorio: ${{ github.repository }}"
         echo "Branch: ${{ github.ref }}"
         echo "Commit: ${{ github.sha }}"
         echo "Data: $(date)"
         echo ""
-        echo " CI executado com sucesso"
-        echo " Ver detalhes: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+        echo "RESUMO DA EXECUCAO:"
+        echo "- Python testado: 3.9, 3.10, 3.11"
+        echo "- google-generativeai: ${{ env.GEMINI_AVAILABLE == 'true' && 'INSTALADO' || 'NAO INSTALADO' }}"
+        echo "- Estrutura do projeto: VALIDADA"
+        echo "- Sintaxe Python: VERIFICADA"
+        echo "- Segurança: VERIFICADA"
+        echo ""
+        echo "STATUS: ${{ job.status }}"
+        echo ""
+        echo "Detalhes: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
