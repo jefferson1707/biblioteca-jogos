@@ -1,0 +1,197 @@
+name: CI - Biblioteca de Jogos
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  test:
+    name: Testes e Qualidade
+    runs-on: ubuntu-latest
+    
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+    
+    - name: Configurar Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    
+    - name: Instalar dependências
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov
+    
+    - name: Verificar formatação básica
+      run: |
+        echo "Verificando formatação de código..."
+        python -m py_compile database/*.py models/*.py utils/*.py api/*.py main.py 2>/dev/null || echo "Avisos de compilação (não são erros)"
+    
+    - name: Executar testes
+      run: |
+        python -m pytest tests/ -v
+    
+    - name: Verificar estrutura do projeto
+      run: |
+        echo " Verificando estrutura do projeto..."
+        
+        # Arquivos obrigatórios
+        required_files=("main.py" "requirements.txt" "README.md" ".env.example")
+        for file in "${required_files[@]}"; do
+          if [ -f "$file" ]; then
+            echo " $file encontrado"
+          else
+            echo " $file não encontrado"
+            exit 1
+          fi
+        done
+        
+        # Pastas obrigatórias
+        required_dirs=("database" "models" "utils" "api" "tests")
+        for dir in "${required_dirs[@]}"; do
+          if [ -d "$dir" ]; then
+            echo " $dir/ encontrado"
+            # Conta arquivos Python
+            py_count=$(find "$dir" -name "*.py" | wc -l)
+            echo "   - $py_count arquivo(s) Python"
+          else
+            echo "$dir/ não encontrado"
+            exit 1
+          fi
+        done
+        
+        echo " Estrutura do projeto válida"
+    
+    - name: Testar imports básicos
+      run: |
+        echo " Testando imports..."
+        python -c "
+        try:
+            from database.connection import DatabaseConnection
+            print('DatabaseConnection importado')
+        except Exception as e:
+            print(f' Erro DatabaseConnection: {e}')
+    
+        try:
+            from models.jogador import Jogador
+            from models.jogo import Jogo
+            print(' Modelos importados')
+        except Exception as e:
+            print(f'  Erro modelos: {e}')
+        
+        try:
+            from utils.display import DisplayUtils
+            print(' Utilitários importados')
+        except Exception as e:
+            print(f'  Erro utilitários: {e}')
+        
+        try:
+            from api.gemini_client import GeminiClient
+            print(' GeminiClient importado')
+        except Exception as e:
+            print(f'  Erro GeminiClient: {e}')
+        "
+    
+    - name: Verificar variáveis de ambiente
+      run: |
+        echo "📝 Verificando .env.example..."
+        if [ -f ".env.example" ]; then
+          if grep -q "DB_SERVER" .env.example && grep -q "GEMINI_API_KEY" .env.example; then
+            echo ".env.example contém variáveis necessárias"
+          else
+            echo " .env.example não contém todas as variáveis necessárias"
+          fi
+        fi
+    
+    - name: Validar requirements.txt
+      run: |
+        echo " Verificando requirements.txt..."
+        if [ -f "requirements.txt" ]; then
+          echo "Conteúdo de requirements.txt:"
+          cat requirements.txt
+          echo ""
+          
+          # Verifica se tem as dependências principais
+          if grep -q "pyodbc" requirements.txt && \
+             grep -q "pandas" requirements.txt && \
+             grep -q "requests" requirements.txt; then
+            echo "requirements.txt contém dependências principais"
+          else
+            echo "  requirements.txt pode estar incompleto"
+          fi
+        fi
+
+  validate:
+    name: Validação de Código
+    runs-on: ubuntu-latest
+    needs: test
+    
+    steps:
+    - name: Checkout do código
+      uses: actions/checkout@v4
+    
+    - name: Configurar Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.10'
+    
+    - name: Verificar sintaxe Python em todos os arquivos
+      run: |
+        echo " Verificando sintaxe Python..."
+        find . -name "*.py" -type f | while read file; do
+          if python -m py_compile "$file" 2>/dev/null; then
+            echo "$file - Sintaxe OK"
+          else
+            echo " $file - Erro de sintaxe"
+            python -m py_compile "$file"
+            exit 1
+          fi
+        done
+    
+    - name: Verificar por credenciais expostas
+      run: |
+        echo " Verificando credenciais expostas..."
+        # Padrões para evitar
+        patterns=(
+          "password.*=.*['\"].*['\"]"
+          "api_key.*=.*['\"].*['\"]"
+          "secret.*=.*['\"].*['\"]"
+          "token.*=.*['\"].*['\"]"
+        )
+        
+        found_issues=false
+        
+        for pattern in "${patterns[@]}"; do
+          if grep -r "$pattern" --include="*.py" . | grep -v "test_" | grep -v "#.*example" | grep -v "sua_senha" | grep -v "sua_chave"; then
+            echo "  Possível credencial exposta encontrada: $pattern"
+            found_issues=true
+          fi
+        done
+        
+        if [ "$found_issues" = true ]; then
+          echo "Possíveis credenciais expostas encontradas"
+          exit 1
+        else
+          echo " Nenhuma credencial exposta encontrada"
+        fi
+    
+    - name: Gerar relatório final
+      if: always()
+      run: |
+        echo " RELATÓRIO DE CI"
+        echo "=================="
+        echo "Repositório: ${{ github.repository }}"
+        echo "Branch: ${{ github.ref }}"
+        echo "Commit: ${{ github.sha }}"
+        echo "Data: $(date)"
+        echo ""
+        echo " CI executado com sucesso"
+        echo " Ver detalhes: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"

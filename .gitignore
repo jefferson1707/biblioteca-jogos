@@ -1,0 +1,26 @@
+# ESSENCIAL: Nunca versionar credenciais!
+.env
+*.env
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Banco de dados local
+*.db
+*.sqlite
+*.mdf
+*.ldf
+
+# Sistema
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
+
+# Logs
+*.log

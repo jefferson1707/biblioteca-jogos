@@ -1,0 +1,86 @@
+{
+  "god of war_any": {
+    "nome": "god of war",
+    "genero": "N/A",
+    "desenvolvedor": "N/A",
+    "publicador": "N/A",
+    "ano_lancamento": "N/A",
+    "descricao": "Informações não disponíveis no momento.",
+    "metacritic_score": "N/A",
+    "tempo_medio_conclusao": "N/A",
+    "plataformas": [
+      "N/A"
+    ],
+    "curiosidade": "N/A",
+    "fonte": "Sistema (API indisponível)",
+    "consulta": "god of war"
+  },
+  "rainbow 6 siege x_playstation 5": {
+    "nome": "Rainbow 6 Siege X",
+    "genero": "N/A",
+    "desenvolvedor": "N/A",
+    "publicador": "N/A",
+    "ano_lancamento": "N/A",
+    "descricao": "Informações não disponíveis no momento.",
+    "metacritic_score": "N/A",
+    "tempo_medio_conclusao": "N/A",
+    "plataformas": [
+      "N/A"
+    ],
+    "curiosidade": "N/A",
+    "fonte": "Sistema (API indisponível)",
+    "consulta": "Rainbow 6 Siege X"
+  },
+  "god of war: ragnarok_playstation 5": {
+    "nome": "God of War: Ragnarök",
+    "genero": "Ação-aventura",
+    "desenvolvedor": "Santa Monica Studio",
+    "publicador": "Sony Interactive Entertainment",
+    "ano_lancamento": 2022,
+    "descricao": "Kratos e Atreus embarcam em uma jornada épica pelos Nove Reinos para impedir o Ragnarök, enfrentando deuses nórdicos e feras míticas em um conto emocionante de família e destino.",
+    "metacritic_score": 94,
+    "tempo_medio_conclusao": 25.5,
+    "plataformas": [
+      "PlayStation 4",
+      "PlayStation 5"
+    ],
+    "curiosidade": "O jogo ganhou o prêmio de Melhor Narrativa no The Game Awards 2022, além de outros seis prêmios, incluindo Melhor Jogo de Ação/Aventura.",
+    "fonte": "Google Gemini AI",
+    "consulta": "God of War: Ragnarok"
+  },
+  "mortal kombat 1_playstation 5": {
+    "nome": "Mortal Kombat 1",
+    "genero": "Luta",
+    "desenvolvedor": "NetherRealm Studios",
+    "publicador": "Warner Bros. Games",
+    "ano_lancamento": 2023,
+    "descricao": "Mortal Kombat 1 reimagina o universo icônico com uma nova linha do tempo criada por Liu Kang. Apresenta um sistema de combate renovado, incluindo os Kameo Fighters, e uma história cinematográfica brutal.",
+    "metacritic_score": 82,
+    "tempo_medio_conclusao": 6.0,
+    "plataformas": [
+      "PlayStation 5",
+      "Xbox Series X|S",
+      "Nintendo Switch",
+      "PC"
+    ],
+    "curiosidade": "O jogo é considerado um 'soft reboot' da franquia, reiniciando a linha do tempo após os eventos de Mortal Kombat 11, com Liu Kang como o novo Guardião do Tempo e Deus do Fogo.",
+    "fonte": "Google Gemini AI",
+    "consulta": "Mortal Kombat 1"
+  },
+  "silent hill: short message_playstation 5": {
+    "nome": "Silent Hill: Short Message",
+    "genero": "Horror psicológico",
+    "desenvolvedor": "Konami Digital Entertainment",
+    "publicador": "Konami Digital Entertainment",
+    "ano_lancamento": 2024,
+    "descricao": "Uma experiência de horror psicológico gratuita, focada em temas de bullying e redes sociais, onde a protagonista Anita explora um prédio abandonado em busca de sua amiga Maya.",
+    "metacritic_score": 54,
+    "tempo_medio_conclusao": 1.5,
+    "plataformas": [
+      "PlayStation 5"
+    ],
+    "curiosidade": "O jogo foi anunciado e lançado gratuitamente na PlayStation Store imediatamente após sua revelação durante uma transmissão State of Play em janeiro de 2024.",
+    "fonte": "Google Gemini AI",
+    "consulta": "Silent Hill: Short Message"
+  }
+}
