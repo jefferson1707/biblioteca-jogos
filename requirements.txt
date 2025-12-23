@@ -5,7 +5,7 @@ python-dotenv>=1.0.0
 requests>=2.31.0
 
 # API Google Gemini
-google-generativeai>=0.8.5
+google-generativeai @ git+https://github.com/google/generative-ai-python.git@v0.3.2
 
 # Utilitarios
 tabulate>=0.9.0
