@@ -91,11 +91,8 @@ Um sistema completo para gerenciamento de biblioteca pessoal de jogos com integr
 # Instalar dependencias necessarias 
 -pip install -r requirements.txt
 
-# Configurar Banco de Dados
--Execute o script SQL fornecido em database/setup.sql Ou execute manualmente:
-
--CREATE DATABASE Biblioteca_jogos;
--- As tabelas serao criadas automaticamente na primeira execucao
+# Configure banco de dados automaticamente
+python setup_database.py
 
 #  Configurar Variaveis de Ambiente
 # Copiar arquivo de exemplo
